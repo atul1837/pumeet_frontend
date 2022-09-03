@@ -42,7 +42,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.31.4",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "husky": "^8.0.1",
+    "husky": "^4.3.8",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
     "typescript": "4.7.4"
@@ -57,12 +57,10 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx,html}": [
       "npm run lint",
-      "npm run format",
-      "git add ."
+      "npm run format"
     ],
     "*.{md}": [
-      "npm run formatmd",
-      "git add"
+      "npm run formatmd"
     ]
   },
   "commitlint": {
@@ -80,5 +78,4 @@
       }
     }
   }
-
 }
