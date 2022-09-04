@@ -4,7 +4,7 @@
     "es2021": true,
     "commonjs": true
   },
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
@@ -23,6 +23,7 @@
       "jsx": true
     },
     "ecmaVersion": 12,
+    "requireConfigFile": false,
     "sourceType": "module"
   },
   "settings": {

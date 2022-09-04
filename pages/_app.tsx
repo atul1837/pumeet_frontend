@@ -3,6 +3,7 @@ import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../src/theme';
 import '../styles/globals.scss';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = (props: any) => {
   const { Component, pageProps } = props;
