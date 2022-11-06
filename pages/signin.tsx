@@ -3,11 +3,26 @@ import Head from 'next/head';
 
 import { PasswordHideIcon } from '../src/icons/password-hide'
 import { PasswordShowIcon } from '../src/icons/password-show'
+import { AuthRegistration, AuthLogin } from '../src/services/authentication.js'
 
 import styles from '../styles/auth.module.scss';
 
 function SigninPage() {
     const [isPasswordVisible, setPasswordVisibility] = useState(false);
+
+    const handleSubmit = (e: any) => {
+        e.preventDefault();
+        let params = {
+            email: e.target.email.value,
+            password: e.target.password.value,
+        }
+        console.log(params)
+        let response = AuthLogin(params);
+        if (response) {
+            console.log("qeeeeeeee" + response)
+        }
+    }
+
     return (
         <div>
             <Head>
@@ -19,7 +34,7 @@ function SigninPage() {
                         <div className={styles.header}>
                             <h2>Sign In</h2>
                         </div>
-                        <form className={styles.form} autoComplete="off">
+                        <form className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
                             <div className="my-2">
                                 <label for="email">Your email</label>
                                 <div className={styles.input}>

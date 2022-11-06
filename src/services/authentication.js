@@ -3,9 +3,13 @@ import axios from 'axios';
 export async function AuthRegistration(params) {
   console.log('AuthRegistration: ', params);
   let returnData = null;
-  await axios.post('http://localhost:8000/auth/registration/', {
+  await axios({
     method: 'POST',
+    url: 'http://localhost:8000/auth/registration/',
     data: JSON.stringify(params),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
     .then((response) => {
       returnData = response;
@@ -13,38 +17,42 @@ export async function AuthRegistration(params) {
     .catch((error) => {
       returnData = error.data;
     });
-  
+
   return returnData;
 }
 
 export async function AuthLogin(params) {
+  console.log('params: ', params);
+  let config = {
+    url: 'http://localhost:8000/auth/login/',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: JSON.stringify(params),
+  };
+  console.log("config", config);
   console.log('AuthLogin: ', params);
   let returnData = null;
-  await axios.post('http://localhost:8000/auth/login/', {
-    method: 'POST',
-    // headers: {
-    //   Authorization: "Token  " + authToken
-    // },
-    data: params,
-  })
+  await axios(config)
     .then((response) => {
       returnData = response;
-      // localStorage.setItem("AUTH_TOKEN", response.key);
+      console.log("response", response);
+      localStorage.setItem("AUTH_TOKEN", response.data.key);
     })
     .catch((error) => {
       returnData = error.data;
     });
-  
+
   return returnData;
 }
 
 export async function AuthLogout() {
   console.log('Req AuthLogout...');
   localStorage.removeItem('AUTH_TOKEN');
-  window.location.replace("/signin");
+  window.location.replace('/signin');
   return true;
 }
-
 
 // export async function AuthCheckEmailExist(params) {
 //   let returnData = null;
@@ -106,4 +114,3 @@ export async function AuthLogout() {
 //     });
 //   return returnData;
 // }
-
