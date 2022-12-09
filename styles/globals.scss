@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800&display=swap');
 
@@ -41,4 +44,9 @@ p, span {
   font-weight: 400;
   white-space: nowrap;
   text-align: center;
+}
+
+.link {
+  font-size: 14px;
+  color: #0d6efd;
 }

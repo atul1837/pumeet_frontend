@@ -1,7 +1,8 @@
 .__page_auth {
     min-width: 100vw;
     min-height: 100vh;
-    background: linear-gradient(179.53deg, #f5f6fa -2.35%, #fff -2.34%, rgb(255, 51, 0, 8%) 99.2%);
+    // background: linear-gradient(179.53deg, #f5f6fa -2.35%, #fff -2.34%, rgb(255, 51, 0, 8%) 99.2%);
+    background: #f3f4f6;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -30,7 +31,6 @@
             }
             .input {
                 box-sizing: border-box;
-                margin: 0;
                 position: relative;
                 color: rgba(0, 0, 0, .85);
                 font-size: 14px;

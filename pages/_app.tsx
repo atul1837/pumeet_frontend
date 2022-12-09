@@ -1,9 +1,11 @@
+import { theme } from '../src/theme';
+import '../styles/globals.scss';
+
 import Head from 'next/head';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme } from '../src/theme';
-import '../styles/globals.scss';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { NotifierContextProvider } from 'react-headless-notifier';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = (props: any) => {
   const { Component, pageProps } = props;
@@ -23,7 +25,15 @@ const App = (props: any) => {
         </Head>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          {getLayout(<Component {...pageProps} />)}
+          <NotifierContextProvider
+            config={{
+              max: null,
+              duration: 5000,
+              position: 'topRight',
+            }}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </NotifierContextProvider>
         </ThemeProvider>
       </>
   );

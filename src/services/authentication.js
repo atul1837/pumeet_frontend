@@ -1,50 +1,39 @@
 import axios from 'axios';
 
 export async function AuthRegistration(params) {
-  console.log('AuthRegistration: ', params);
-  let returnData = null;
-  await axios({
-    method: 'POST',
-    url: 'http://localhost:8000/auth/registration/',
-    data: JSON.stringify(params),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((response) => {
-      returnData = response;
-    })
-    .catch((error) => {
-      returnData = error.data;
-    });
 
-  return returnData;
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: 'http://localhost:8000/auth/registration/',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: params,
+    })
+    return response;
+  } catch (error) {
+    const errorData = error?.response?.data;
+    return ({ error: errorData[Object.keys(errorData)?.[0]]?.[0]});
+  }
+  
 }
 
 export async function AuthLogin(params) {
-  console.log('params: ', params);
-  let config = {
-    url: 'http://localhost:8000/auth/login/',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: JSON.stringify(params),
-  };
-  console.log("config", config);
-  console.log('AuthLogin: ', params);
-  let returnData = null;
-  await axios(config)
-    .then((response) => {
-      returnData = response;
-      console.log("response", response);
-      localStorage.setItem("AUTH_TOKEN", response.data.key);
+  try {
+    const response = await axios({
+      url: 'http://localhost:8000/auth/login/',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: params,
     })
-    .catch((error) => {
-      returnData = error.data;
-    });
-
-  return returnData;
+    return response;
+  } catch(error) {
+    const errorData = error?.response?.data;
+    return ({ error: errorData[Object.keys(errorData)?.[0]]?.[0]});
+  }
 }
 
 export async function AuthLogout() {

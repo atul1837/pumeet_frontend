@@ -1,25 +1,45 @@
 import React, {useState} from "react";
 import Head from 'next/head';
+import { useNotifier } from 'react-headless-notifier';
+import { DangerNotification } from '../src/components/notifications';
 
 import { PasswordHideIcon } from '../src/icons/password-hide';
 import { PasswordShowIcon } from '../src/icons/password-show';
-import { AuthRegistration, AuthLogin } from '../src/services/authentication.js';
+import { AuthRegistration } from '../src/services/authentication.js';
 
 import styles from '../styles/auth.module.scss';
 
+interface formData {
+    preventDefault: any,
+    target: signupForm
+}
+
+interface signupForm {
+    email: { value: string },
+    password1: { value: string },
+    password2: { value: string },
+}
+
 function SignupPage() {
+    const { notify } = useNotifier();
     const [isPasswordVisible, setPasswordVisibility] = useState(false);
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = async(e: formData) => {
         e.preventDefault();
         let params = {
             email: e.target.email.value,
             password1: e.target.password1.value,
             password2: e.target.password2.value
         }
-        let response = AuthRegistration(params);
-        if (response) {
-            console.log("qeeeeeeee" + response)
+        try {
+            let response: any = await AuthRegistration(params);
+            if(response?.error) {
+                throw new Error(response?.error);
+            } else if(response) {
+                window.location.replace('/signin');
+            }
+        } catch (err: any) {
+            notify(<DangerNotification message={err.message} />);
         }
     }
 
@@ -36,16 +56,16 @@ function SignupPage() {
                         </div>
                         <form className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
                             <div className="my-2">
-                                <label for="email">Email</label>
+                                <label htmlFor="email">Email</label>
                                 <div className={styles.input}>
                                     <input type="email" name="email" id="email" placeholder="e.g. kashish@gmail.com" />
                                 </div>
                             </div>
                             <div className="my-2">
-                                <label for="email">Password</label>
-                                <div className={styles.input + " d-flex mb-2"}>
+                                <label htmlFor="email">Password</label>
+                                <div className={styles.input + " flex mb-4"}>
                                     <input type={isPasswordVisible ? "text" : "password"} name="password1" id="password1" placeholder="e.g. 2$F04Hr@6RMr" />
-                                    <div className="d-flex justify-content-center align-items-center">
+                                    <div className="flex justify-center items-center">
                                         <span className={styles.toggle} onClick={() => setPasswordVisibility(!isPasswordVisible)}>
                                             {isPasswordVisible ? <PasswordShowIcon /> : <PasswordHideIcon />}
                                         </span>
@@ -55,15 +75,15 @@ function SignupPage() {
                                     <input type={isPasswordVisible ? "text" : "password"} name="password2" id="password2" placeholder="Confirm password" />
                                 </div>
                             </div>
-                            <div className="my-2 d-flex justify-content-end">
-                                <span style={{ fontSize: "14px", color: "#0d6efd" }}>Forgot password?</span>
+                            <div className="my-2 flex justify-content-end">
+                                <span className="link">Forgot password?</span>
                             </div>
                             <div className="mt-4">
-                                <button className="theme-btn mb-2">Sign Up</button>
+                                <button className="theme-btn mb-4">Sign Up</button>
                                 <p className="text-center mb-1" style={{color: "rgba(0, 0, 0, 0.45)"}}>By signing up you agree to our <a href="#">Terms & Conditions.</a></p>
                             </div>
                             <div className="text-center">
-                                <p>Already have an account? <a href="/signin">Sign In</a></p>
+                                <p>Already have an account? <a className="link" href="/signin">Sign In</a></p>
                             </div>
                         </form>
                     </div>
