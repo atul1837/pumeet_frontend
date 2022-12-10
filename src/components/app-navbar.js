@@ -55,7 +55,7 @@ export const AppNavbar = (props) => {
               "lineHeight": "30px",
               "fontSize": "22px",
               "paddingLeft": "10px",
-              "fontWeight": "100"
+              "fontWeight": "300"
             }}>Panjab University</h2>
             {/* <AppLogo
               sx={{

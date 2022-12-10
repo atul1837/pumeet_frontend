@@ -1,8 +1,8 @@
 import React, {useState} from "react";
 import Head from 'next/head';
 import { useNotifier } from 'react-headless-notifier';
-import { DangerNotification } from '../src/components/notifications';
 
+import { DangerNotification } from '../src/components/notifications';
 import { PasswordHideIcon } from '../src/icons/password-hide';
 import { PasswordShowIcon } from '../src/icons/password-show';
 import { AuthRegistration } from '../src/services/authentication.js';

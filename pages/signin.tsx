@@ -1,11 +1,11 @@
 import React, {useState} from "react";
 import Head from 'next/head';
 import { useNotifier } from 'react-headless-notifier';
-import { DangerNotification } from '../src/components/notifications';
 
+import { DangerNotification } from '../src/components/notifications';
 import { PasswordHideIcon } from '../src/icons/password-hide'
 import { PasswordShowIcon } from '../src/icons/password-show'
-import { AuthRegistration, AuthLogin } from '../src/services/authentication.js'
+import { AuthLogin } from '../src/services/authentication.js'
 
 import styles from '../styles/auth.module.scss';
 
@@ -22,6 +22,13 @@ interface signinForm {
 function SigninPage() {
     const { notify } = useNotifier();
     const [isPasswordVisible, setPasswordVisibility] = useState(false);
+
+    React.useEffect(() => {
+        const AUTH_TOKEN = localStorage.getItem("AUTH_TOKEN");
+        if (!!AUTH_TOKEN) {
+            window.location.replace('/');
+        }
+    }, [])
 
     const handleSubmit = async(e: any) => {
         e.preventDefault();
@@ -79,7 +86,7 @@ function SigninPage() {
                                 <button className="theme-btn">Sign In</button>
                             </div>
                             <div className="text-center">
-                                <p>Don't have an account? <a href="/signup">Sign Up</a></p>
+                                <p>Don't have an account? <a href="/signup" className="link">Sign Up</a></p>
                             </div>
                         </form>
                     </div>
