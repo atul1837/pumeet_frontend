@@ -43,13 +43,16 @@ interface candidateForm {
   diploma_board: { value: string },
   diploma_institute: { value: string },
   diploma_marks: { value: string },
+  all_india_rank: { value: string }
 }
 
 function IndexPage() {  
   const { notify } = useNotifier();
   const [authToken, setAuthToken] = React.useState("");
   const [editable, setEditable] = React.useState(true);
+  const [profileData, setProfileData] = React.useState({});
   const [formValid, setFormValid] = React.useState(true);
+  const [isLoading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
     const AUTH_TOKEN = localStorage.getItem("AUTH_TOKEN");
@@ -57,7 +60,7 @@ function IndexPage() {
     if (!AUTH_TOKEN) {
       window.location.replace('/signin');
     } else {
-      getProfileHandler()      
+      getProfileHandler();
     }
   }, [])
 
@@ -65,65 +68,84 @@ function IndexPage() {
     try {
       let response: any = await getProfile();
       if(response?.error) {
-          throw new Error(response?.error);
+        throw new Error(response?.error);
       } else if (response) {
+        response = response.data;
+        setEditable(false);
+        setProfileData(response);
         console.log(response)
       }
     } catch (err: any) {
-      notify(<DangerNotification message={err.message} />);
+      setEditable(true)
     }
   }
 
   const updateProfileHandler = async (params) => {
+    let response: any = await updateProfile(params);
+    if(response?.error) {
+        throw new Error(response?.error);
+    } else if (response) {
+      return response.data;
+    }
+  }
+
+  const closeLoading = (message: any) => {
+    setTimeout(() => {
+      setLoading(false);
+      if(message) notify(<SuccessNotification message={message} />);
+    }, 2000);    
+  }
+
+  const generatePayload = async (form: formData) => {
+    return new Promise((resolve, reject) => {
+      let params: any = {};
+      for (const element of form?.target?.elements) {
+        if (element?.type != "submit" && element?.type != "button") {
+          if (!!element?.value) {
+          params[element?.name] = element?.value;
+          } else { setFormValid(false) }
+        }
+      }
+      resolve(params);
+    });
+  } 
+
+  const handleSubmit = async (form: formData) => {
+    form.preventDefault();
+    setLoading(true);
+
     try {
-      let response: any = await updateProfile(params);
-      if(response?.error) {
-          throw new Error(response?.error);
-      } else if (response) {
-        console.log(response)
+      let clickedBtn = document?.activeElement?.value;
+      if (clickedBtn == "Save") {
+        await generatePayload(form).then(async (params) => {
+          if (!formValid) { notify(<WarningNotification message={"Some fields are empty"} />); }
+          let response = await updateProfileHandler(params);
+          if (response) {
+            closeLoading(response);
+            setEditable(false);
+          }
+        })
+      } else if (clickedBtn == "Edit") {
+        setEditable(true);
+        setLoading(false);
+      } else if (clickedBtn == "Submit") {
+        await generatePayload(form).then(async (params: any) => {
+          if (!formValid) { throw new Error("Some fields are empty") }
+          params["submitted"] = true;
+          let response = await updateProfileHandler(params);
+          if (response) {
+            closeLoading(response);
+            setEditable(false);
+          }
+        })
       }
     } catch (err: any) {
+      setLoading(false);
       notify(<DangerNotification message={err.message} />);
     }
   }
 
-  const handleSubmit = async(form: formData) => {
-    form.preventDefault();
-
-    let params:any = {};
-    for (const element of form?.target?.elements) {
-      if (element?.type != "submit" && element?.type != "button") {
-        params[element?.name] = element?.value;
-        if (!element?.value) { setFormValid(false) }
-      }
-    }
-
-    try {
-      let clickedBtn = document?.activeElement?.value;
-      if (clickedBtn == "save") {
-        console.log(params)
-        notify(<SuccessNotification message={"Profile successfully saved"} />);
-        if (!formValid) { notify(<WarningNotification message={"Some fields are empty"} />); }
-        updateProfileHandler(params)
-      } else if (clickedBtn == "edit") {
-        setEditable(true);
-      } else if (clickedBtn == "submit") {
-        if (!formValid) { throw new Error("Some fields are empty") }
-      }
-      // let response: any = await AuthLogin(params);
-      // if(response?.error) {
-      //     throw new Error(response?.error);
-      // } else if (response) {
-      //     console.log(response.data.key)
-      //     localStorage.setItem("AUTH_TOKEN", response.data.key);
-      //     window.location.replace('/');
-      // }
-    } catch (err: any) {
-        notify(<DangerNotification message={err.message} />);
-    }
-  }
-
-  if (!authToken) {
+  if (!authToken || isLoading) {
     return (
       <div className="absolute top-0 left-0 w-screen h-screen bg-white flex justify-center items-center" style={{ zIndex: 1200 }}>
         <h1>Loading...</h1>
@@ -142,7 +164,7 @@ function IndexPage() {
         component="main"
         sx={{
           flexGrow: 1,
-          py: 8,
+          py: 5,
           background: "#f6f6f9"
         }}
       >
@@ -285,6 +307,13 @@ function IndexPage() {
                     </div>
                   </div>                  
 
+                  <div className="col-span-6">
+                    <label htmlFor="all_india_rank">All India Rank</label>
+                    <div className={styles.input}>
+                      <input disabled={!editable} type="text" name="all_india_rank" id="all_india_rank" />
+                    </div>
+                  </div>                                    
+
                   <div className="col-span-3">
                     <label htmlFor="diploma_institute">Diploma Institute</label>
                     <div className={styles.input}>
@@ -320,10 +349,10 @@ function IndexPage() {
                   <br />
 
                   <div className="mt-4 col-span-2">
-                    <button type="submit" value={editable ? "save" : "edit"} className="theme-btn-outlined mb-4">{editable ? "Save" : "Edit"}</button>
+                    <input disabled={profileData?.submitted} type="submit" value={editable ? "Save" : "Edit"} className="theme-btn-outlined mb-4" />
                   </div>
                   <div className="mt-4 col-span-2">
-                    <button type="submit" value="submit" className="theme-btn mb-4">Submit</button>
+                    <input disabled={profileData?.submitted} type="submit" value={"Submit"} className="theme-btn mb-4" />
                   </div>
                 </form>
               </div>

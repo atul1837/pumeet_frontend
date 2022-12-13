@@ -74,7 +74,20 @@ p, span {
     background: rgb(249, 82, 82);
 }
 
+.theme-btn:disabled, .theme-btn-outlined:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.theme-btn-outlined:disabled {
+  background-color: unset;
+  color: rgb(249, 82, 82);
+}
+
 .link {
   font-size: 14px;
   color: #0d6efd;
+}
+
+.react-headless-notifier-top-0 {
+  top: 75px !important;
 }

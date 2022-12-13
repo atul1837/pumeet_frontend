@@ -143,7 +143,7 @@ export function DangerNotification({ message }) {
     <div className="w-80 border-1 border-gray-100 bg-white p-4 text-sm flex rounded-lg shadow relative">
       <button
         type="button"
-        className="absolute right-0 w-4 text-red-400 mr-3"
+        className="absolute right-0 top-0 w-4 text-red-400 mr-3"
         onClick={(el) => { el.currentTarget.parentElement.parentElement.style.display = "none" }}
       >
         <svg

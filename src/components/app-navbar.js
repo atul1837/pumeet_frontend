@@ -6,7 +6,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 const AppNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   boxShadow: '0 1px 0rgba(0, 0, 0, 0.08)',
-  height: '91px',
+  height: '75px',
   justifyContent: 'center',
   borderBottom: '1px solid #EBF0F5'
 }));

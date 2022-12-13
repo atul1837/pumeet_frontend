@@ -50,7 +50,7 @@ export const AppSidebar = (props) => {
         <div>
           <Box
             sx={{
-              height: '90px',
+              height: '74px',
               px: 3,
               display: 'flex',
               alignItems: 'center',
@@ -64,7 +64,7 @@ export const AppSidebar = (props) => {
               "lineHeight": "30px",
               "fontSize": "22px",
               "paddingLeft": "10px",
-              "fontWeight": "100"
+              "fontWeight": "500"
             }}>Panjab University</h2>
               {/* <AppLogo
                 sx={{
