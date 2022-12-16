@@ -35,6 +35,7 @@ interface candidateForm {
   tenth_board: { value: string },
   tenth_marks: { value: string },
   tenth_passing_year: { value: string },
+  tenth_certificate: { value: File },
   tweleveth_board: { value: string },
   tweleveth_makrs: { value: string },
   tweleveth_passing_year: { value: string },
@@ -287,7 +288,13 @@ function IndexPage() {
                     </div>
                   </div>
                   <br />
-                  
+                  <div className='col-span-2'>
+                    <label htmlFor="tenth_certificate">10th Certificate</label>
+                    <div className={styles.input}>
+                      <input disabled={!editable} type="file" name="tenth_certificate" id="tenth_certificate" />
+                    </div>
+                  </div>
+                  <br />
                   <div className="col-span-2">
                     <label htmlFor="twelveth_board">12th Board</label>
                     <div className={styles.input}>
