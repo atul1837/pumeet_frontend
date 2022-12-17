@@ -78,7 +78,7 @@ function Profile() {
             }
           } else {
             if (document?.activeElement?.value == "Submit") {
-              reject(false);
+              // reject(false);
             }
           }
         }
