@@ -19,13 +19,20 @@ interface formData {
 
 function Profile() {  
   const { notify } = useNotifier();
+  const [authToken, setAuthToken] = React.useState("");
   const [profileData, setProfileData] = React.useState<CandidateProfileResponse>();
   const [editable, setEditable] = React.useState(true);
 
   const [isLoading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
-    getProfileHandler();
+    const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN');
+    setAuthToken(AUTH_TOKEN || "")
+    if (!AUTH_TOKEN) {
+      window.location.replace('/signin');
+    } else {
+      getProfileHandler();
+    };
   }, [])
 
   const getProfileHandler = async () => {
@@ -37,6 +44,7 @@ function Profile() {
         response = response.data;
         setEditable(false);
         setProfileData(response);
+        setLoading(false)
         console.log(response)
       }
     } catch (err: any) {
@@ -44,7 +52,7 @@ function Profile() {
     }
   }
 
-  const updateProfileHandler = async (params) => {
+  const updateProfileHandler = async (params: any) => {
     let response: any = await updateProfile(params);
     try {
       if (response?.error) {
@@ -107,7 +115,7 @@ function Profile() {
     }
   }
 
-  if (isLoading) {
+  if (!authToken || isLoading) {
     return (
       <div className="absolute top-0 left-0 w-screen h-screen bg-white flex justify-center items-center" style={{ zIndex: 1200 }}>
         <h1>Loading...</h1>
@@ -328,10 +336,10 @@ function Profile() {
                       </div>
                     
                       <div className="mt-4 col-span-2">
-                          <input disabled={profileData?.submitted} type="submit" value={editable ? "Save" : "Edit"} className="theme-btn-outlined mb-4" />
+                          <input disabled={(profileData?.submitted || profileData?.approved)} type="submit" value={editable ? "Save" : "Edit"} className="theme-btn-outlined mb-4" />
                       </div>
                       <div className="mt-4 col-span-2">
-                          <input disabled={profileData?.submitted} type="submit" value={"Submit"} className="theme-btn mb-4" />
+                          <input disabled={(profileData?.submitted || profileData?.approved)} type="submit" value={"Submit"} className="theme-btn mb-4" />
                       </div> 
                   </div>
 
@@ -344,7 +352,7 @@ function Profile() {
                       }
                     </div>
                     <div>
-                      {!profileData?.submitted && <WarningAlert message={"You need to submit your profile to get approved"} />}                      
+                      {(!profileData?.submitted && !profileData?.approved) && <WarningAlert message={"You need to submit your profile to get approved"} />}                      
                     </div>
                     <div className="text-xs px-1 py-3 text-slate-500">
                       <strong>Note :</strong>

@@ -6,29 +6,66 @@ import { useNotifier } from 'react-headless-notifier';
 import {
   DangerNotification
 } from '../src/components/notifications';
-import { getPreferences, updatePreferences } from '../src/services/profiling.js'
+import { getPreferences, addPreference, deleteAllPreferences, getBranchList } from '../src/services/preferences.js'
+import { getProfile } from '../src/services/profiling.js'
 import { AppLayout } from '../src/components/app-layout';
-import { candidateProfileForm, CandidateProfileResponse } from '../src/interfaces/profile';
-import { InfoAlert, WarningAlert, SuccessAlert } from '../src/components/alerts.js'
 import styles from '../styles/auth.module.scss';
 
-interface formData {
-  preventDefault: any,
-  target: candidateProfileForm | any
-}
 
 function Preferences() {  
   const { notify } = useNotifier();
-  const [profileData, setProfileData] = React.useState<CandidateProfileResponse>();
+  const [authToken, setAuthToken] = React.useState("");
+  const [preferenceList, setPreferenceList] = React.useState<any>([]);
+  const [branchList, setBranchList] = React.useState<any>();
   const [editable, setEditable] = React.useState(true);
-
   const [isLoading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
-    getProfileHandler();
+    const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN');
+    setAuthToken(AUTH_TOKEN || "")
+    if (!AUTH_TOKEN) {
+      window.location.replace('/signin');
+    } else {
+      getProfileHandler()
+      getBranchListHandler();
+      getPreferencesHandler();      
+    };
   }, [])
 
   const getProfileHandler = async () => {
+    setLoading(true)
+    try {
+      let response: any = await getProfile();
+      if(response?.error) {
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        if (!response.approved) {
+          window.location.replace("/profile")      
+        } else {
+          setLoading(false)
+        }
+      }
+    } catch (err: any) {
+      window.location.replace("/profile")
+    }
+  }
+
+  const getBranchListHandler = async () => {
+    try {
+      let response: any = await getBranchList();
+      if(response?.error) {
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        setBranchList(response);
+      }
+    } catch (err: any) {
+      setEditable(true);
+    }
+  }
+
+  const getPreferencesHandler = async () => {
     try {
       let response: any = await getPreferences();
       if(response?.error) {
@@ -36,44 +73,85 @@ function Preferences() {
       } else if (response) {
         response = response.data;
         setEditable(false);
-        setProfileData(response);
-        console.log(response)
+        setPreferenceList(response);
       }
     } catch (err: any) {
       setEditable(true);
     }
   }
 
-  const updateProfileHandler = async (params) => {
-    let response: any = await updateProfile(params);
+  const addPreferenceComponent = () => {
+    setEditable(true);
+    setPreferenceList(
+      (prevState: any) => (
+        [...prevState, { preference: (preferenceList.length + 1) }]
+      )
+    );
+  }
+
+  const removePreferenceComponenet = (preferenceNumber: number) => {
+    if (!editable) {
+      return;
+    }
+    let temp = preferenceList;
+    temp = temp.filter((preference: any) => preference.preference != preferenceNumber);
+    temp = temp.map((preference: any) => {
+      if (preference.preference > preferenceNumber) {
+        preference.preference -= 1
+      }
+      return preference
+    })
+    setPreferenceList(temp)
+  }  
+
+  const updatePreferencesHandler = async (params: any) => {
+    let deleted: any = await deleteAllPreferences();
     try {
-      if (response?.error) {
-        throw new Error(response?.error);
-      } else if (response) {
-        return response.data;
+      if (deleted?.error) {
+        throw new Error(deleted?.error);
+      } else if (deleted) {
+        let response: any;
+        for (let index = 0; index < params.length; index++){
+          response = await addPreference({
+            preference: params[index][0],
+            branch: params[index][1]
+          });
+          if (response?.error) {
+            throw new Error(response?.error);
+          }
+        }
+        if (response) {
+          return response.data;          
+        }
       }
     } catch (err: any) {
       notify(<DangerNotification message={err.message} />);
     }
   }
 
+  const hasDuplicates = (array) => {
+    return (new Set(array)).size !== array.length;
+  }
+
   const generatePayload = async (form: formData) => {
     return new Promise((resolve, reject) => {
-      let params: any = {};
-      for (const element of form?.target?.elements) {
-        if (element?.type != "submit" && element?.type != "button") {
-          if (!!element?.value) {
-            if (element?.type == "file") {
-              params[element?.name] = element?.files[0];
-            } else {
-              params[element?.name] = element?.value;
-            }
+      let params: any = [];
+      let chosenBranches: any = [];
+      let formElements: any = form?.target?.elements;
+      for (let index = 0; index < formElements.length; index += 2) {
+        let preferenceElement = formElements[index];
+        let branchElement = formElements[index+1];
+        if (preferenceElement?.type != "submit" && preferenceElement?.type != "button") {
+          if (!!preferenceElement?.value && !!branchElement?.value) {
+            params.push([preferenceElement?.value, branchElement?.value]);
+            chosenBranches.push(branchElement?.value);
           } else {
-            if (document?.activeElement?.value == "Submit") {
-              reject(false);
-            }
+            reject("Please remove the empty preferences");
           }
         }
+      }
+      if (hasDuplicates(chosenBranches)) {
+        reject("Please select different branch for each preference")
       }
       resolve(params);
     });
@@ -81,7 +159,7 @@ function Preferences() {
 
   const handleSubmit = async (form: formData) => {
     form.preventDefault();
-
+    setEditable(false)
     try {
       let clickedBtn = document?.activeElement?.value;
       if (clickedBtn == "Edit") {
@@ -91,14 +169,14 @@ function Preferences() {
       } else {
         try {
           await generatePayload(form).then(async (params: any) => {
-            if(clickedBtn == "Submit") { params["submitted"] = true; }
-            let response = await updateProfileHandler(params);
+            let response: any = await updatePreferencesHandler(params);
             if (response) {
+              console.log(response)
               window.location.reload(true);              
             }
           })
         } catch (err: any) {
-          notify(<DangerNotification message={"Some fields are empty"} />);            
+          notify(<DangerNotification message={err} />);            
         }
       }
     } catch (err: any) {
@@ -107,7 +185,36 @@ function Preferences() {
     }
   }
 
-  if (isLoading) {
+  const PreferenceComponent = ({ preferenceNumber, defaultBranch }: any) => {
+    return (
+      <>
+        <div className="col-span-4">
+          <label htmlFor="pre">Preferences</label>
+          <div className={styles.input}>
+            <input readOnly={true} disabled={!editable} name="preference" id="preference" value={preferenceNumber} />
+          </div>
+        </div>
+        <div className="col-span-4">
+          <label htmlFor="branch">Branch</label>
+          <select disabled={!editable} defaultValue={defaultBranch} name="branch" id="branch" className={"p-1.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"}>
+            <option value="">Select a branch</option>
+            {branchList?.map((branch: any) => {
+              return (
+                <option key={branch.id} value={branch.id}>{branch.branch_name}</option>
+              )
+            })}
+          </select> 
+        </div>
+        <div className="col-span-1 flex justify-center items-end mb-1">
+          <span type="button" onClick={() => removePreferenceComponenet(preferenceNumber)}>
+            <svg className={editable ? "bin fill-slate-500 hover:fill-red-500" : "bin disabled fill-slate-500 hover:fill-red-500"} xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="28px" height="28px"><path d="M 10 2 L 9 3 L 5 3 C 4.448 3 4 3.448 4 4 C 4 4.552 4.448 5 5 5 L 7 5 L 17 5 L 19 5 C 19.552 5 20 4.552 20 4 C 20 3.448 19.552 3 19 3 L 15 3 L 14 2 L 10 2 z M 5 7 L 5 20 C 5 21.105 5.895 22 7 22 L 17 22 C 18.105 22 19 21.105 19 20 L 19 7 L 5 7 z"/></svg>
+          </span>
+        </div>
+      </>
+    )
+  }
+
+  if (!authToken || isLoading) {
     return (
       <div className="absolute top-0 left-0 w-screen h-screen bg-white flex justify-center items-center" style={{ zIndex: 1200 }}>
         <h1>Loading...</h1>
@@ -133,229 +240,48 @@ function Preferences() {
         <Container maxWidth={false}>
           <div className="px-6 py-2">
             <div className={styles.header}>
-              <h2 className="font-medium mb-2 px-1">Your Profile</h2>
+              <h2 className="font-medium mb-2 px-1">Your Preferences</h2>
             </div>
             <div className={styles.content_wrapper}>
               <div className={styles._box + ` p-6`}>
                 <form className={styles.form + " grid gap-x-6 gap-y-2 grid-cols-7"} autoComplete="off" onSubmit={handleSubmit}>    
-                    <div className="col-span-5 grid gap-x-2 gap-y-2 grid-cols-6">
-                      <div className="col-span-6">
-                          <label htmlFor="application_number">Application No.</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="application_number" id="application_number" placeholder="e.g. 1234567890" defaultValue={profileData?.application_number} />
-                          </div>
+                  <div className="col-span-5 grid gap-x-2 gap-y-2 grid-cols-9">
+                    {!preferenceList.length ?
+                      <div className="col-span-8 mt-5 font-semibold text-slate-500">
+                        No preferences added. 
                       </div>
+                      :
+                      <>
+                        {preferenceList?.sort((p1: any, p2: any) => { return (p1.preference - p2.preference) })
+                          .map((preference: any, index: number) => {
+                            return (
+                              <PreferenceComponent
+                                key={index}
+                                defaultBranch={preference?.branch?.id}
+                                preferenceNumber={preference?.preference}
+                              />
+                            )
+                        })}                  
+                      </>
+                    }
 
-                      <div className="col-span-6">
-                          <label htmlFor="name">Full Name</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="name" id="name" placeholder="e.g. Kashish Goyal" defaultValue={profileData?.name} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-3">
-                          <label htmlFor="email">Email</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="email" name="email" id="email" placeholder="e.g. kashish.profile@gmail.com" defaultValue={profileData?.email} />
-                          </div>
-                      </div>
-                      <div className="col-span-3">
-                          <label htmlFor="mobile_no">Phone No.</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="mobile_no" id="mobile_no" placeholder="e.g. +918837678215" defaultValue={profileData?.mobile_no} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-2">
-                          <label htmlFor="date_of_birth">Date of Birth</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="date" name="date_of_birth" id="date_of_birth" placeholder="e.g. 24-10-2001" defaultValue={profileData?.date_of_birth} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="gender">Gender</label>
-                          <select disabled={!editable} defaultValue={profileData?.gender} name="gender" id="gender" className={"p-1.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"}>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                              <option value="other">Other</option>
-                          </select> 
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="category">Category</label>
-                          <select disabled={!editable} defaultValue={profileData?.category} name="category" id="category" className={"p-1.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"}>
-                              <option value="general">General</option>
-                              <option value="scheduled_caste">SC</option>
-                              <option value="schedule_tribe">ST</option>
-                          </select> 
-                      </div>
-
-                      <div className="col-span-3">
-                          <label htmlFor="nationality">Country</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="nationality" id="nationality" placeholder="e.g. India" defaultValue={profileData?.nationality} />
-                          </div>
-                      </div>
-                      <div className="col-span-3">
-                          <label htmlFor="state">State</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="state" id="state" placeholder="e.g. Punjab" defaultValue={profileData?.state} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-3">
-                          <label htmlFor="permanent_address">Permanent Address</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="permanent_address" id="permanent_address" placeholder="e.g. #182, Sector 24, Chandigarh" defaultValue={profileData?.permanent_address} />
-                          </div>
-                      </div>
-                      <div className="col-span-3">
-                          <label htmlFor="correspondance_address">Correspondence Address</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="correspondance_address" id="correspondance_address" placeholder="e.g. #182, Sector 24, Chandigarh" defaultValue={profileData?.correspondance_address} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-3">
-                          <label htmlFor="father_name">Father Name</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="father_name" id="father_name" defaultValue={profileData?.father_name} />
-                          </div>
-                      </div>
-                      <div className="col-span-3">
-                          <label htmlFor="mother_name">Mother Name</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="mother_name" id="mother_name" defaultValue={profileData?.mother_name} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-2">
-                          <label htmlFor="tenth_board">10th Board</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="tenth_board" id="tenth_board" placeholder="e.g. CBSE" defaultValue={profileData?.tenth_board} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="tenth_passing_year">10th Passing Year</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="tenth_passing_year" id="tenth_passing_year" placeholder="e.g. 2018" defaultValue={profileData?.tenth_passing_year} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="tenth_marks">10th Marks(%)</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="tenth_marks" id="tenth_marks" placeholder="e.g. 86.4" defaultValue={profileData?.tenth_marks} />
-                          </div>
-                      </div>
-                      
-                      <div className="col-span-2">
-                          <label htmlFor="twelveth_board">12th Board</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="twelveth_board" id="twelveth_board" placeholder="e.g. CBSE" defaultValue={profileData?.twelveth_board} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="twelveth_passing_year">12th Passing Year</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="twelveth_passing_year" id="twelveth_passing_year" placeholder="e.g. 2018" defaultValue={profileData?.twelveth_passing_year} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="twelveth_marks">12th Marks(%)</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="twelveth_marks" id="twelveth_marks" placeholder="e.g. 86.4" defaultValue={profileData?.twelveth_marks} />
-                          </div>
-                      </div>                  
-
-                      <div className="col-span-3">
-                        <label htmlFor="tenth_certificate">10th Certificate</label>
-                        <div className={styles.input} >
-                          <input disabled={!editable} type="file" name="tenth_certificate" id="tenth_certificate" />
-                        </div>
-                        <div className={ editable ? "text-xs" : "text-xs text-slate-500" }>{ profileData?.tenth_certificate?.split('/')?.pop() }</div>
-                      </div>
-                      <div className="col-span-3">
-                        <label htmlFor="twelveth_certificate">12th Certificate</label>
-                        <div className={styles.input} >
-                            <input disabled={!editable} type="file" name="twelveth_certificate" id="twelveth_certificate" />
-                        </div>
-                        <div className={ editable ? "text-xs" : "text-xs text-slate-500" }>{ profileData?.twelveth_certificate?.split('/')?.pop() }</div>
-                      </div>
-                    
-                      <div className="col-span-6">
-                          <label htmlFor="all_india_rank">All India Rank</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="all_india_rank" id="all_india_rank" defaultValue={profileData?.all_india_rank} />
-                          </div>
-                      </div>                                    
-
-                      <div className="col-span-3">
-                          <label htmlFor="diploma_institute">Diploma Institute</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="diploma_institute" id="diploma_institute" defaultValue={profileData?.diploma_institute} />
-                          </div>
-                      </div>
-                      <div className="col-span-3">
-                          <label htmlFor="diploma_branch">Diploma Branch</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="diploma_branch" id="diploma_branch" placeholder="e.g. CSE" defaultValue={profileData?.diploma_branch} />
-                          </div>
-                      </div>
-
-                      <div className="col-span-2">
-                          <label htmlFor="diploma_board">Diploma Board</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="diploma_board" id="diploma_board" placeholder="e.g. PSBTE" defaultValue={profileData?.diploma_board} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="diploma_passing_year">Diploma Passing Year</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="diploma_passing_year" id="diploma_passing_year" placeholder="e.g. 2018" defaultValue={profileData?.diploma_passing_year} />
-                          </div>
-                      </div>
-                      <div className="col-span-2">
-                          <label htmlFor="diploma_marks">Diploma Marks(%)</label>
-                          <div className={styles.input}>
-                              <input disabled={!editable} type="text" name="diploma_marks" id="diploma_marks" placeholder="e.g. 86.4" defaultValue={profileData?.diploma_marks} />
-                          </div>
-                      </div>
-                      <div className="col-span-6">
-                        <label htmlFor="diploma_certificate">Diploma Certificate</label>
-                        <div className={styles.input} >
-                            <input disabled={!editable} type="file" name="diploma_certificate" id="diploma_certificate" />
-                        </div>
-                        <div className={ editable ? "text-xs" : "text-xs text-slate-500" }>{ profileData?.diploma_certificate?.split('/')?.pop() }</div>
-                      </div>
-                    
-                      <div className="mt-4 col-span-2">
-                          <input disabled={profileData?.submitted} type="submit" value={editable ? "Save" : "Edit"} className="theme-btn-outlined mb-4" />
-                      </div>
-                      <div className="mt-4 col-span-2">
-                          <input disabled={profileData?.submitted} type="submit" value={"Submit"} className="theme-btn mb-4" />
-                      </div> 
+                    <div className="mt-4 col-span-3">
+                      <input type="submit" value={editable ? "Save" : "Edit"} className="theme-btn mb-4" />
+                    </div>  
                   </div>
 
                   <div className="col-span-2">
-                    <div>
-                      {profileData?.approved ?
-                        <SuccessAlert message="Your profile is approved!" />
-                        :
-                        <InfoAlert message="Your profile is not approved" />
-                      }
+                    <div className="mt-6">
+                      <input type="button" value="Add Preference" className="theme-btn-outlined mb-2" onClick={addPreferenceComponent} />
                     </div>
-                    <div>
-                      {!profileData?.submitted && <WarningAlert message={"You need to submit your profile to get approved"} />}                      
-                    </div>
-                    <div className="text-xs px-1 py-3 text-slate-500">
+                    <div className="text-xs px-1 text-slate-500">
                       <strong>Note :</strong>
                       {" "}
                       <span className="text-xs text-inherit font-medium">
-                        You can submit your profile only once.
-                        Save instead to be able to update it later.
+                        You can update your preferences n times till 31 December, 2022.
                       </span>
                     </div>
                   </div>
-
 
                 </form>
               </div>

@@ -1,26 +1,18 @@
 import Head from 'next/head';
 import React from 'react';
-import { Box, Container, Grid } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import { useNotifier } from 'react-headless-notifier';
 
 import {
-  SuccessNotification,
-  InfoNotification,
-  WarningNotification,
   DangerNotification
 } from '../../src/components/notifications';
-import { getProfile, updateProfile } from '../../src/services/profiling.js'
 import { getCandidates } from '../../src/services/staff/candidates.js';
 import { AppLayout } from '../../src/components/app-layout';
-import styles from '../styles/auth.module.scss';
 
 function IndexPage() {  
   const { notify } = useNotifier();
   const [authToken, setAuthToken] = React.useState("");
-  const [editable, setEditable] = React.useState(true);
   const [candidates, setCandidates] = React.useState([]);
-  const [formValid, setFormValid] = React.useState(true);
-  const [isLoading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
     const AUTH_TOKEN = localStorage.getItem("AUTH_TOKEN");
@@ -47,11 +39,10 @@ function IndexPage() {
     } catch (err: any) {
       notify(<DangerNotification message={"You are not allowed on this view"}  />);
       window.location.replace('/');
-      setEditable(true)
     }
   }
 
-  if (!authToken || isLoading) {
+  if (!authToken) {
     return (
       <div className="absolute top-0 left-0 w-screen h-screen bg-white flex justify-center items-center" style={{ zIndex: 1200 }}>
         <h1>Loading...</h1>
