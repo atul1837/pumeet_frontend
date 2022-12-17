@@ -79,7 +79,7 @@ function IndexPage() {
             {
                 candidates?.map((candidate: any) => {
                     return (
-                        <a href={`/staff/candidate/${candidate?.id}`}>
+                        <a href={`/staff/candidate/${candidate?.user}`}>
                             <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
                                 <div className="flex justify-between">
                                     <div className="flex">
