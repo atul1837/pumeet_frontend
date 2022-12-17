@@ -11,8 +11,9 @@ import {
   WarningNotification,
   DangerNotification,
 } from '../../../src/components/notifications';
-import { getCandidateDetail } from '../../../src/services/staff/candidates.js';
+import { getCandidateDetail, approveCandidateProfile, rejectCandidateProfile } from '../../../src/services/staff/candidates.js';
 import { AppLayout } from '../../../src/components/app-layout';
+import { getCandidatePreferences } from '../../../src/services/staff/seat_management.js';
 
 function CandidateDetailPage() {
   const router = useRouter();
@@ -21,16 +22,19 @@ function CandidateDetailPage() {
   const [authToken, setAuthToken] = React.useState('');
   const [editable, setEditable] = React.useState(true);
   const [candidateDetail, setCandidateDetail] = React.useState({});
+  const [candidatePreferences, setCandidatePreferences] = React.useState([]);
   const [formValid, setFormValid] = React.useState(true);
   const [isLoading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN');
     setAuthToken(AUTH_TOKEN || '');
+    console.log(authToken);
     if (!AUTH_TOKEN) {
       window.location.replace('/signin');
     } else {
       candidate_id && getCandidateDetailHandler();
+      candidate_id && getCandidatePreferencesHandler();
     }
   }, [candidate_id]);
 
@@ -44,6 +48,69 @@ function CandidateDetailPage() {
       } else if (response) {
         response = response.data;
         setCandidateDetail(response);
+        console.log(response);
+      }
+    } catch (err: any) {
+      notify(<DangerNotification message={'You are not allowed on this view'} />);
+      window.location.replace('/staff');
+      setEditable(true);
+    }
+  };
+
+  const approveCandidateProfileHandler = async () => {
+    try {
+      setLoading(true);
+      let response: any = await approveCandidateProfile(candidate_id);
+      if (response?.error) {
+        notify(<DangerNotification message={'You are not allowed on this view'} />);
+        window.location.replace('/staff');
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        notify(<SuccessNotification message={'Candidate profile approved successfully'} />);
+        getCandidateDetailHandler();
+        setLoading(false);
+        console.log(response);
+      }
+    } catch (err: any) {
+      notify(<DangerNotification message={'You are not allowed on this view'} />);
+      window.location.replace('/staff');
+      setEditable(true);
+    }
+  };
+
+  const rejectCandidateProfileHandler = async () => {
+    try {
+      setLoading(true);
+      let response: any = await rejectCandidateProfile(candidate_id);
+      if (response?.error) {
+        notify(<DangerNotification message={'You are not allowed on this view'} />);
+        window.location.replace('/staff');
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        notify(<SuccessNotification message={'Candidate profile rejected successfully'} />);
+        getCandidateDetailHandler();
+        setLoading(false);
+        console.log(response);
+      }
+    } catch (err: any) {
+      notify(<DangerNotification message={'You are not allowed on this view'} />);
+      window.location.replace('/staff');
+      setEditable(true);
+    }
+  };
+
+  const getCandidatePreferencesHandler = async () => {
+    try {
+      let response: any = await getCandidatePreferences(candidate_id);
+      if (response?.error) {
+        notify(<DangerNotification message={'You are not allowed on this view'} />);
+        window.location.replace('/staff');
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        setCandidatePreferences(response);
         console.log(response);
       }
     } catch (err: any) {
@@ -101,22 +168,47 @@ function CandidateDetailPage() {
                     <h3>{candidateDetail?.tenth_board}</h3>
                     <h3>{candidateDetail?.tenth_marks}</h3>
                     <h3>{candidateDetail?.tenth_passing_year}</h3>
-                    <h3>{candidateDetail?.tenth_certificate}</h3>
-                    <h3>{candidateDetail?.tweleveth_board}</h3>
-                    <h3>{candidateDetail?.tweleveth_makrs}</h3>
-                    <h3>{candidateDetail?.tweleveth_passing_year}</h3>
-                    <h3>{candidateDetail?.tweleveth_certificate}</h3>
+                    <a href={"http://localhost:8000"+candidateDetail?.tenth_certificate} target="_blank" className='text-sky-500'>Tenth Certificate</a>
+                    <h3>{candidateDetail?.twelveth_board}</h3>
+                    <h3>{candidateDetail?.twelveth_makrs}</h3>
+                    <h3>{candidateDetail?.twelveth_passing_year}</h3>
+                    <a href={"http://localhost:8000"+candidateDetail?.twelveth_certificate} target="_blank" className='text-sky-500'>Twelveth Certificate</a>
                     <h3>{candidateDetail?.diploma_branch}</h3>
                     <h3>{candidateDetail?.diploma_passing_year}</h3>
                     <h3>{candidateDetail?.diploma_board}</h3>
                     <h3>{candidateDetail?.diploma_institute}</h3>
                     <h3>{candidateDetail?.diploma_marks}</h3>
-                    <h3>{candidateDetail?.diploma_certificate}</h3>
+                    <a href={"http://localhost:8000" + candidateDetail?.diploma_certificate} className="text-sky-500" target="_blank">Diploma Certificate</a>
                     <h3>{candidateDetail?.all_india_rank}</h3>
+                    <h3>{candidateDetail?.approved ? ("Approved") : ("Not Approved")}</h3>
+                    <h3>{candidateDetail?.submitted ? ("Submitted") : ("Not Submitted")}</h3>
                   </div>
                 </div>
               </div>
             )}
+          </div>
+          <div className="px-6 py-2">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center">
+                <a onClick={() => {approveCandidateProfileHandler()}} >
+                  <button className="bg-blue-500 text-white px-4 py-2 rounded-lg">Approve</button>
+                </a>
+                <a onClick={() => {rejectCandidateProfileHandler()}} >
+                  <button className="bg-red-500 text-white px-4 py-2 rounded-lg">Reject</button>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="px-6 py-2">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h1>Candidate Prefrences</h1>
+              {candidatePreferences && (candidatePreferences.map((preference: any) => (
+                <div className="flex justify-start items-center">
+                    <h3>{preference?.preference}</h3>
+                    <h3 className='px-5'>{preference?.branch?.name}</h3>
+                </div>
+              )))}
+            </div>
           </div>
         </Container>
       </Box>
