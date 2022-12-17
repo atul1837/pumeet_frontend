@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { AppBar, Avatar, Box, IconButton, Toolbar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 // import { AppLogo } from '../icons/app-logo';
+import { AuthLogout } from '../services/authentication';
 
 const AppNavbarRoot = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -72,7 +73,9 @@ export const AppNavbar = (props) => {
               border: '1px solid #EBF0F5',
               borderRadius: 1,
               display: 'flex',
+              cursor: 'pointer'
             }}
+            onClick={AuthLogout}
           >
             <Avatar
               sx={{
@@ -87,10 +90,10 @@ export const AppNavbar = (props) => {
               sx={{
                 color: '#1E272E',
                 fontSize: 16,
-                px: 1
+                px: 2
               }}
             >
-              Kashish Goyal
+              Logout
             </Box>
           </Box>
         </Toolbar>

@@ -24,8 +24,13 @@ const items = [
     title: 'Staff'
   },
   {
-    href: '/404',
+    href: '/staff/allotment/',
     icon: (<FileIcon fontSize="small" />),
+    title: 'Allotment'
+  },
+  {
+    href: '/404',
+    icon: (<BatchIcon fontSize="small" />),
     title: '404 Page'
   },
 ];
