@@ -6,7 +6,7 @@ import { useNotifier } from 'react-headless-notifier';
 import {
   DangerNotification
 } from '../src/components/notifications';
-import { getProfile, updateProfile } from '../src/services/profiling.js'
+import { getProfile, updateProfile, getAllotment } from '../src/services/profiling.js'
 import { AppLayout } from '../src/components/app-layout';
 import { candidateProfileForm, CandidateProfileResponse } from '../src/interfaces/profile';
 import { InfoAlert, WarningAlert, SuccessAlert } from '../src/components/alerts.js'
@@ -20,6 +20,7 @@ interface formData {
 function Profile() {  
   const { notify } = useNotifier();
   const [authToken, setAuthToken] = React.useState("");
+  const [seatAlloted, setAllotment] = React.useState<any>(false);
   const [profileData, setProfileData] = React.useState<CandidateProfileResponse>();
   const [editable, setEditable] = React.useState(true);
 
@@ -32,8 +33,24 @@ function Profile() {
       window.location.replace('/signin');
     } else {
       getProfileHandler();
+      getAllotmentHandler();
     };
   }, [])
+
+  const getAllotmentHandler = async () => {
+    try {
+      let response: any = await getAllotment();
+      if(response?.error) {
+        throw new Error(response?.error);
+      } else if (response) {
+        response = response.data;
+        setAllotment(response);
+        console.log(response)
+      }
+    } catch (err: any) {
+
+    }
+  }
 
   const getProfileHandler = async () => {
     try {
@@ -345,8 +362,16 @@ function Profile() {
 
                   <div className="col-span-2">
                     <div>
+                      {seatAlloted && <SuccessAlert message={
+                        "You have been alloted " +
+                        seatAlloted?.branch?.name +
+                        " in " +
+                        seatAlloted?.allotment_category
+                      } />}
+                    </div>
+                    <div>
                       {profileData?.approved ?
-                        <SuccessAlert message="Your profile is approved!" />
+                        <InfoAlert message="Your profile is approved!" />
                         :
                         <InfoAlert message="Your profile is not approved" />
                       }
