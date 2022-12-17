@@ -11,12 +11,12 @@ const items = [
   {
     href: '/',
     icon: (<GraphIcon fontSize="small" />),
-    title: 'Home'
+    title: 'Your Profile'
   },
   {
-    href: '/404',
+    href: '/preferences',
     icon: (<BatchIcon fontSize="small" />),
-    title: '404 Page'
+    title: 'Preferences'
   },
   {
     href: '/404',
@@ -81,9 +81,9 @@ export const AppSidebar = (props) => {
           }}
         />
         <Box sx={{ flexGrow: 1 }}>
-          {items.map((item) => (
+          {items.map((item, key) => (
             <NavItem
-              key={item.title}
+              key={key}
               icon={item.icon}
               href={item.href}
               title={item.title}

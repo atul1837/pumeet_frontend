@@ -57,7 +57,7 @@ function SigninPage() {
             </Head>
             <div className={styles.__page_auth}>
                 <div className={styles.content_wrapper}>
-                    <div className={styles._box}>
+                    <div className={`${styles._box} flex flex-col justify-center`}>
                         <div className={styles.header}>
                             <h2>Sign In</h2>
                         </div>

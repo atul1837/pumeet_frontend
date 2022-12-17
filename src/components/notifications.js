@@ -1,6 +1,5 @@
 import 'react-app-polyfill/ie11';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 
 
 export function SuccessNotification({ message }) {
@@ -8,7 +7,7 @@ export function SuccessNotification({ message }) {
     <div className="w-80 border-1 border-gray-100 bg-white p-4 text-sm flex items-center rounded-lg shadow relative">
       <button
         type="button"
-        className="absolute right-0 top-0 w-4 text-green-400 m-3"
+        className="absolute right-0 w-4 text-green-400 m-3"
         onClick={(el) => { el.currentTarget.parentElement.parentElement.style.display = "none" }}
       >
         <svg
@@ -53,7 +52,7 @@ export function InfoNotification({ message }) {
     <div className="w-80 border-1 border-gray-100 bg-white p-4 text-sm flex items-center rounded-lg shadow relative">
       <button
         type="button"
-        className="absolute right-0 top-0 w-4 text-blue-400 m-3"
+        className="absolute right-0 w-4 text-blue-400 m-3"
         onClick={(el) => { el.currentTarget.parentElement.parentElement.style.display = "none" }}
       >
         <svg
@@ -98,7 +97,7 @@ export function WarningNotification({ message }) {
     <div className="w-80 border-1 border-gray-100 bg-white p-4 text-sm flex items-center rounded-lg shadow relative">
       <button
         type="button"
-        className="absolute right-0 top-0 w-4 text-yellow-400 m-3"
+        className="absolute right-0 w-4 text-yellow-400 m-3"
         onClick={(el) => { el.currentTarget.parentElement.parentElement.style.display = "none" }}
       >
         <svg
@@ -143,7 +142,7 @@ export function DangerNotification({ message }) {
     <div className="w-80 border-1 border-gray-100 bg-white p-4 text-sm flex rounded-lg shadow relative">
       <button
         type="button"
-        className="absolute right-0 top-0 w-4 text-red-400 mr-3"
+        className="absolute right-0 w-4 text-red-400 mr-3"
         onClick={(el) => { el.currentTarget.parentElement.parentElement.style.display = "none" }}
       >
         <svg

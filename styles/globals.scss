@@ -23,6 +23,11 @@ p, span {
   font-size: 14px;
 }
 
+input:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .theme-btn {
   color: #fff;
   border-color: rgb(249, 82, 82);
@@ -88,6 +93,6 @@ p, span {
   color: #0d6efd;
 }
 
-.react-headless-notifier-top-0 {
-  top: 75px !important;
+.react-headless-notifier-fixed {
+  z-index: 1500;
 }

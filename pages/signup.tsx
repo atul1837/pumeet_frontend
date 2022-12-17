@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import Head from 'next/head';
 import { useNotifier } from 'react-headless-notifier';
 
@@ -22,7 +22,11 @@ interface signupForm {
 
 function SignupPage() {
     const { notify } = useNotifier();
-    const [isPasswordVisible, setPasswordVisibility] = useState(false);
+    const [isPasswordVisible, setPasswordVisibility] = React.useState(false);
+
+    React.useEffect(() => {
+       localStorage.removeItem('AUTH_TOKEN') 
+    }, [])
 
     const handleSubmit = async(e: formData) => {
         e.preventDefault();
@@ -50,7 +54,7 @@ function SignupPage() {
             </Head>
             <div className={styles.__page_auth}>
                 <div className={styles.content_wrapper}>
-                    <div className={styles._box}>
+                    <div className={`${styles._box} flex flex-col justify-center`}>
                         <div className={styles.header}>
                             <h2>Sign Up</h2>
                         </div>

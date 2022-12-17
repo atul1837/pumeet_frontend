@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-export async function getProfile() {
+export async function getPreferences() {
   try {
     const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN')
     const response = await axios({
       method: 'GET',
-      url: 'http://localhost:8000/api/candidate-profile/profile/',
+      url: 'localhost:8000/api/seat-management/prefrence/list/',
       headers: {
         'Authorization': 'Token ' + AUTH_TOKEN
       },
@@ -17,7 +17,7 @@ export async function getProfile() {
   } 
 }
 
-export async function updateProfile(params) {
+export async function updatePreferences(params) {
   try {
     const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN')
     const response = await axios({
@@ -36,7 +36,7 @@ export async function updateProfile(params) {
   } 
 }
 
-export async function deleteProfile() {
+export async function deletePreferences() {
   try {
     const AUTH_TOKEN = localStorage.getItem('AUTH_TOKEN')
     const response = await axios({
