@@ -96,3 +96,7 @@ input:disabled {
 .react-headless-notifier-fixed {
   z-index: 1500;
 }
+
+.bin.disabled, .bin.disabled:hover {
+  fill: rgb(148, 163, 184);
+}

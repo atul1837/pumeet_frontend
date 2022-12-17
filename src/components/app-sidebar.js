@@ -15,8 +15,13 @@ const items = [
   },
   {
     href: '/preferences',
-    icon: (<BatchIcon fontSize="small" />),
+    icon: (<FileIcon fontSize="small" />),
     title: 'Preferences'
+  },
+  {
+    href: '/staff',
+    icon: (<BatchIcon fontSize="small" />),
+    title: 'Staff'
   },
   {
     href: '/404',

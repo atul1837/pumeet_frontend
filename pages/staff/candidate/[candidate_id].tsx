@@ -2,13 +2,11 @@ import { useRouter } from 'next/router';
 
 import Head from 'next/head';
 import React from 'react';
-import { Box, Container, Grid } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import { useNotifier } from 'react-headless-notifier';
 
 import {
   SuccessNotification,
-  InfoNotification,
-  WarningNotification,
   DangerNotification,
 } from '../../../src/components/notifications';
 import { getCandidateDetail, approveCandidateProfile, rejectCandidateProfile } from '../../../src/services/staff/candidates.js';
@@ -20,10 +18,8 @@ function CandidateDetailPage() {
   const { candidate_id } = router.query;
   const { notify } = useNotifier();
   const [authToken, setAuthToken] = React.useState('');
-  const [editable, setEditable] = React.useState(true);
   const [candidateDetail, setCandidateDetail] = React.useState({});
   const [candidatePreferences, setCandidatePreferences] = React.useState([]);
-  const [formValid, setFormValid] = React.useState(true);
   const [isLoading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -53,7 +49,6 @@ function CandidateDetailPage() {
     } catch (err: any) {
       notify(<DangerNotification message={'You are not allowed on this view'} />);
       window.location.replace('/staff');
-      setEditable(true);
     }
   };
 
@@ -75,7 +70,6 @@ function CandidateDetailPage() {
     } catch (err: any) {
       notify(<DangerNotification message={'You are not allowed on this view'} />);
       window.location.replace('/staff');
-      setEditable(true);
     }
   };
 
@@ -97,7 +91,6 @@ function CandidateDetailPage() {
     } catch (err: any) {
       notify(<DangerNotification message={'You are not allowed on this view'} />);
       window.location.replace('/staff');
-      setEditable(true);
     }
   };
 
@@ -116,7 +109,6 @@ function CandidateDetailPage() {
     } catch (err: any) {
       notify(<DangerNotification message={'You are not allowed on this view'} />);
       window.location.replace('/staff');
-      setEditable(true);
     }
   };
 
